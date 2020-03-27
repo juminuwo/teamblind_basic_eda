@@ -1,15 +1,31 @@
 from urllib import request
 from bs4 import BeautifulSoup
 import re
+import os
 
 
-def cleanhtml(raw_html):
+def clean_html(raw_html):
     cleanr = re.compile('<.*?>')
     cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
 
 
-class blind_html():
+def get_article_urls():
+    url_str = 'https://www.teamblind.com'
+    with request.urlopen(url_str) as url:
+        s = url.read()
+    soup = BeautifulSoup(s)
+    articles_list = soup.find('div', {'class': 'lst_wrap'})
+    articles_list = articles_list.find_all('li', {'class': 'word-break'})
+    article_urls = []
+    for article in articles_list:
+        link_ext = article.find('a', href=True)
+        if link_ext is not None:
+            article_urls.append(url_str + link_ext['href'])
+    return article_urls
+
+
+class blind_thread():
     def __init__(self, url):
         with request.urlopen(url) as url:
             s = url.read()
@@ -25,5 +41,6 @@ class blind_html():
 if __name__ == '__main__':
     url = 'https://www.teamblind.com/post/Amazon-phone-screening-ByCM6MB6'
     url = 'https://www.teamblind.com/post/Who-needs-a-co-founder-XyWjhctu'
-    s = blind_html(url)
+    s = blind_thread(url)
     s.get_thread()
+    get_article_urls()
