@@ -1,7 +1,38 @@
-from urllib import request
-from bs4 import BeautifulSoup
-import re
 import os
+import re
+from urllib import request
+
+import pandas as pd
+from bs4 import BeautifulSoup
+
+
+def add_thread(contents, companies, url):
+    s = blind_thread(url)
+    content, company = s.get_thread()
+    print('-----')
+    print('Thread Content: {}'.format(content))
+    print('Compant: {}'.format(company))
+    contents.append(content)
+    companies.append(company)
+
+
+def download_threads(urls):
+    if os.path.isfile('threads.csv'):
+        df = pd.read_csv('threads.csv')
+    else:
+        df = []
+
+    contents = []
+    companies = []
+    for url in urls:
+        if isinstance(df, pd.DataFrame):
+            if url not in df.iloc[:, 2]:
+                add_thread(contents, companies, url)
+        else:
+            add_thread(contents, companies, url)
+    df = pd.DataFrame({'content': contents, 'company': companies, 'url': urls})
+    df.to_csv('threads.csv', mode='a', header=False, index=False)
+    return df
 
 
 def clean_html(raw_html):
@@ -30,17 +61,27 @@ class blind_thread():
         with request.urlopen(url) as url:
             s = url.read()
         self.soup = BeautifulSoup(s)
+        self.regex = re.compile('[^a-zA-Z]')
 
     def get_thread(self):
         # get main thread text
-        thread = self.soup.p.get_text(' ')
-        company = self.soup.find('div', {'class': 'writer'}).a.get_text()
+        #thread = self.soup.p.get_text(' ')
+        #company = self.soup.find('div', {'class': 'writer'}).a.get_text()
+        thread = self.soup.find('div', {
+            'class': 'detail word-break'
+        }).p.get_text(' ')
+        company = self.soup.find('div', {'class': 'writer'}).span.text[:-1]
+        company = self.regex.sub('', company)
         return thread, company
 
 
 if __name__ == '__main__':
-    url = 'https://www.teamblind.com/post/Amazon-phone-screening-ByCM6MB6'
-    url = 'https://www.teamblind.com/post/Who-needs-a-co-founder-XyWjhctu'
-    s = blind_thread(url)
-    s.get_thread()
-    get_article_urls()
+    # url = 'https://www.teamblind.com/post/Amazon-phone-screening-ByCM6MB6'
+    # url = 'https://www.teamblind.com/post/Who-needs-a-co-founder-XyWjhctu'
+    # url = 'https://www.teamblind.com/post/how-is-sunnyvale-ca-is-it-bad-relatively-compared-to-sf-30VHQPAR'
+    # url = 'https://www.teamblind.com/post/TripActions-Laidoff-350-People-QdmaW3Z8'
+    # s = blind_thread(url)
+    # s.get_thread()
+
+    urls = get_article_urls()
+    download_threads(urls)
