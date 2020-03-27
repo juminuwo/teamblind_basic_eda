@@ -3,9 +3,11 @@ import re
 from urllib import request
 
 import pandas as pd
+import timeout_decorator
 from bs4 import BeautifulSoup
 
 
+@timeout_decorator.timeout(30)
 def add_thread(contents, companies, url):
     s = blind_thread(url)
     content, company = s.get_thread()
@@ -22,20 +24,19 @@ def download_threads(urls):
     companies = []
     for url in urls:
         if os.path.isfile('threads.csv'):
-            df = pd.read_csv('threads.csv')
+            df = pd.read_csv('threads.csv').drop_duplicates()
         else:
             df = []
-        if isinstance(df, pd.DataFrame):
-            if url not in df.iloc[:, 2]:
-                content, company, url = add_thread(contents, companies, url)
-        else:
+        try:
             content, company, url = add_thread(contents, companies, url)
-        df = pd.DataFrame({
-            'content': [content],
-            'company': [company],
-            'url': [url]
-        })
-        df.to_csv('threads.csv', mode='a', header=False, index=False)
+            df = pd.DataFrame({
+                'content': [content],
+                'company': [company],
+                'url': [url]
+            })
+            df.to_csv('threads.csv', mode='a', header=False, index=False)
+        except:
+            print('{} has timed out.'.format(url))
     return df
 
 
