@@ -11,7 +11,7 @@ def add_thread(contents, companies, url):
     content, company = s.get_thread()
     print('-----')
     print('Thread Content: {}'.format(content))
-    print('Compant: {}'.format(company))
+    print('Company: {}'.format(company))
     contents.append(content)
     companies.append(company)
 
