@@ -14,24 +14,28 @@ def add_thread(contents, companies, url):
     print('Company: {}'.format(company))
     contents.append(content)
     companies.append(company)
+    return content, company, url
 
 
 def download_threads(urls):
-    if os.path.isfile('threads.csv'):
-        df = pd.read_csv('threads.csv')
-    else:
-        df = []
-
     contents = []
     companies = []
     for url in urls:
+        if os.path.isfile('threads.csv'):
+            df = pd.read_csv('threads.csv')
+        else:
+            df = []
         if isinstance(df, pd.DataFrame):
             if url not in df.iloc[:, 2]:
-                add_thread(contents, companies, url)
+                content, company, url = add_thread(contents, companies, url)
         else:
-            add_thread(contents, companies, url)
-    df = pd.DataFrame({'content': contents, 'company': companies, 'url': urls})
-    df.to_csv('threads.csv', mode='a', header=False, index=False)
+            content, company, url = add_thread(contents, companies, url)
+        df = pd.DataFrame({
+            'content': [content],
+            'company': [company],
+            'url': [url]
+        })
+        df.to_csv('threads.csv', mode='a', header=False, index=False)
     return df
 
 
@@ -45,7 +49,7 @@ def get_article_urls():
     url_str = 'https://www.teamblind.com'
     with request.urlopen(url_str) as url:
         s = url.read()
-    soup = BeautifulSoup(s)
+    soup = BeautifulSoup(s, features='html.parser')
     articles_list = soup.find('div', {'class': 'lst_wrap'})
     articles_list = articles_list.find_all('li', {'class': 'word-break'})
     article_urls = []
