@@ -7,8 +7,11 @@ from extract import download_threads, get_article_urls
 
 
 def download():
-    urls = get_article_urls()
-    download_threads(urls)
+    try:
+        urls = get_article_urls()
+        download_threads(urls)
+    except Exception as e:
+        print(e)
 
 
 def job():

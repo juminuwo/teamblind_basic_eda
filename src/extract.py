@@ -46,6 +46,7 @@ def clean_html(raw_html):
     return cleantext
 
 
+@timeout_decorator.timeout(30)
 def get_article_urls():
     url_str = 'https://www.teamblind.com'
     with request.urlopen(url_str) as url:
